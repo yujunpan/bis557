@@ -5,11 +5,15 @@
 #' @param formula a formula
 #' @param data a data.frame
 #' @return An lm object
-#' @importFrom stats lm
-#' @examples
-#' fit <- linear_model(Sepal.Length ~., iris)
-#' summary(fit)
+#' @importFrom stats model.matrix
 #' @export
 linear_model <- function(formula, data) {
-  lm(formula, data)
+  coef<-list()
+  x_var<-all.vars(formula)
+  X<-model.matrix(formula, data)
+  Y<-data[,x_var[1]]
+  
+  coef$coefficients=qr.coef(qr(X),Y)
+  class(coef)="lm"
+  return(coef)
 }
