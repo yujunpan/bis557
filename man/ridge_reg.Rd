@@ -2,20 +2,20 @@
 % Please edit documentation in R/ridge_regression.R
 \name{ridge_reg}
 \alias{ridge_reg}
-\title{Fit a ridge regression model}
+\title{Fit a Ridge Regression Model}
 \usage{
 ridge_reg(form, lambda, d)
 }
 \arguments{
-\item{lambda}{a vector}
+\item{form}{A formula}
 
-\item{formula}{a formula}
+\item{lambda}{A penalty value}
 
-\item{data}{a data.frame}
+\item{d}{A data.frame}
 }
 \value{
-An list
+An lm object
 }
 \description{
-This function runs ridge regression on dataset
+This function passes parameters to the ridge_reg function.
 }

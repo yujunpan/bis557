@@ -1,11 +1,12 @@
-#' Fit a ridge regression model 
+#' Fit a Ridge Regression Model
 #'
-#' @description This function runs ridge regression on dataset
-#' @param formula a formula
-#' @param data a data.frame
-#' @param lambda a vector
-#' @return An list
-#' @importFrom stats model.matrix
+#' @description This function passes parameters to the ridge_reg function.
+#' @param form A formula
+#' @param lambda A penalty value 
+#' @param d A data.frame
+#' @return An lm object
+#' @importFrom stats model.matrix 
+#' @examples
 #' @export
 
 
