@@ -2,9 +2,9 @@
 #'
 #' @description This function passes parameters to the ridge_reg function.
 #' @param form A formula
-#' @param lambda A penalty value 
+#' @param lambda regularization parameter
 #' @param d A data.frame
-#' @return An lm object
+#' @return An list contain coefficients, lambda and formula
 #' @importFrom stats model.matrix 
 #' @examples
 #' @export

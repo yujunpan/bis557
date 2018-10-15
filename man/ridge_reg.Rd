@@ -9,12 +9,12 @@ ridge_reg(form, lambda, d)
 \arguments{
 \item{form}{A formula}
 
-\item{lambda}{A penalty value}
+\item{lambda}{regularization parameter}
 
 \item{d}{A data.frame}
 }
 \value{
-An lm object
+An list contain coefficients, lambda and formula
 }
 \description{
 This function passes parameters to the ridge_reg function.

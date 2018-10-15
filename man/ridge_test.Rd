@@ -3,8 +3,7 @@
 \docType{data}
 \name{ridge_test}
 \alias{ridge_test}
-\title{A data set for the second homework}
+\title{A test dataset for ridge regression}
 \description{
-In homework 2 we explore the effect of lambda values
-on ridge regressions. This data set gives us a basis for exploration.
+The test data after ridge regression is trained on training data
 }

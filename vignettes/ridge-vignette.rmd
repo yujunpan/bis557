@@ -23,21 +23,19 @@ data(ridge_test)
 data(ridge_train)
 ```
 
-
-### predict function
-
+### ridge class
 ```{r}
 predict.ridge_reg = function(object,...) {
   newdata = list(...)[[1]]
   m = model.matrix(object$form, newdata)
   m %*% object$coefficients
 }
+
 ```
 
-
-### MSE
+### train data and calculate out of sample MSE
 ```{r}
-lambda_seq = lambda_seq = seq(0.01, 1000, by=0.1)
+lambda_seq = seq(0.01, 1000, by=0.1)
 MSEs = rep(NA, length(lambda_seq))
 for (i in 1:length(lambda_seq)){
   fit = ridge_reg(y ~., lambda_seq[i], ridge_train)
@@ -46,13 +44,12 @@ for (i in 1:length(lambda_seq)){
 }
 ```
 
-### 
-
+### plot
 ```{r}
-plot(log(lambda_seq), MSEs, xlab = "log(lambda)", ylab = "Out-of-Sample MSE", pch=19, col="blue")
+plot(log(lambda_seq), MSEs, xlab = "log(lambda)", ylab = "Out-of-Sample MSE")
 ```
 
-###
+### show lambda with smallest MSE
 ```{r}
 lambda_seq[which.min(MSEs)]
 ```

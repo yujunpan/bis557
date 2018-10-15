@@ -1,8 +1,7 @@
-#' A data set for the second homework
+#' A test dataset for ridge regression
 #'
 #' @name ridge_test
 #' @docType data
 #' @rdname ridge_test
-#' @description In homework 2 we explore the effect of lambda values
-#' on ridge regressions. This data set gives us a basis for exploration.
+#' @description The test data after ridge regression is trained on training data
 NULL
