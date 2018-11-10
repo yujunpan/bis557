@@ -214,6 +214,7 @@ Now let's find testing KKT condition by using the made up dataset in textbook
 
 ```{r message=FALSE}
 # textbook page 190
+library(glmnet)
 set.seed(8907)
 n <- 1000L
 p <- 5000L
@@ -225,9 +226,9 @@ y <- X %*% beta + rnorm(n = n, sd = 0.15)
 # apply lasso regression
 lasso_reg_with_screening <- function(x, y){
   m1 <- cv.glmnet(x,y,alpha=1) # fit lasso regression
-  lambda_min <- m1$lambda.min # lambda with the smallest MSE
-  beta <- m1$glmnet.fit$beta[, m1$lambda == lambda_min]
-  casl_lenet_check_kkt(X, y, beta, lambda_min)
+  lambda_1se <- m1$lambda.1se # lambda with the smallest MSE
+  beta <- m1$glmnet.fit$beta[, m1$lambda == lambda_1se]
+  casl_lenet_check_kkt(X, y, beta, lambda_1se)
 }
 
 #screen the dataset
