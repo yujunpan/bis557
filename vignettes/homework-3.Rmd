@@ -1,0 +1,235 @@
+---
+title: "Homework 3"
+author: "Yujun Pan"
+date: "11/7/2018"
+output: pdf_document
+---
+
+### Page 117, Problem 7.
+
+The kernel density estimator is given by:
+
+$$
+\begin{aligned}
+f_h(x)= & \frac{1}{n}\sum_iK_h(x-x_i) \\
+= & \frac{1}{nh}\sum_iK(\frac{x-x_i}{h})
+\end{aligned}
+$$
+
+where $K$ is the kernel and h is the bandwidth.
+
+The Epanechnikov kernel function is given by:
+
+$$
+K(x)=\frac{3}{4}(1-x^2)\bullet1_{|x|<1}
+$$
+
+
+
+Epanechnikov kernel function from textbook page 80:
+
+```{r}
+# Evaluate the Epanechnikov kernel function.
+#
+# Args:
+#     x: Numeric vector of points to evaluate the function at.
+#     h: A numeric value giving the bandwidth of the kernel.
+#
+# Returns:
+#     A vector of values with the same length as x.
+
+casl_util_kernel_epan <- function(x, h=1){
+  x <- x / h
+  ran <- as.numeric(abs(x) <= 1)
+  val <- (3/4) * ( 1 - x^2 ) * ran
+  val
+}
+```
+
+R function that computes the kernel regression function for a newly observed data point(textbook Page 81).
+
+```{r}
+# Apply one-dimensional (Epanechnikov) kernel regression.
+#
+# Args:
+#     x: Numeric vector of the original predictor variables.
+#     x_new: A vector of data values at which to estimate.
+#     h: A numeric value giving the bandwidth of the kernel.
+#
+# Returns:
+#     A vector of predictions for each value in x_new.
+kernel_reg <- function(x, x_new, h){
+  sapply(x_new, function(v) {
+    yhat <- mean(casl_util_kernel_epan((v-x),h))/h # divided by nh
+    yhat
+  })
+}
+```
+
+Now let's construct a dataset to be evaluated by simulating from beta distribution and display the density curve:
+
+
+```{r}
+# constructing x, y by beta distribution
+set.seed(0989087)
+x <- runif(10000, min = 0, max = 1)
+x <- sort(x)
+```
+
+Now let's construct a new data set and test them under differeent bandwidth
+
+```{r}
+set.seed(70897)
+x_new <- sort(runif(100, min  =0, max =1))
+h <- seq(0.1, 0.9, by = 0.2)
+
+# plot for each bandwidth
+for(i in 1:length(h)){
+  plot(x_new, kernel_reg(x, x_new, h[i]), type = "l", 
+       main = paste0("h = ", h[i]), ylab = "estimate")
+}
+```
+
+As we can tell from the graph, a large bandwidth leads to a very smooth density distribution with high bias. A small bandwidth leads to an unsmooth density distribution with high variance. This is a bias-variance trade off situation. 
+
+
+### Page 200, Problem 3. 
+
+Definition of convex: $f:\mathbb{R}^p \rightarrow \mathbb{R}$ is convex if $\forall x_{1}, x_{2} \in \mathbb{R}^p$ and $t \in [0,1]$:
+
+$$
+f(tx_1 + (1-t)x_2) \ \leqslant tf(x_1)+(1-t)f(x_2)
+$$
+
+Suppose $f$ and $f$ are both convex functions, then 
+
+$$
+\begin{aligned}
+&(f+g)\left (tx_1+(1-t)x_2 \right) \\
+=&f[tx_1+(1-t)x_2] +g[tx_1+(1-t)x_2] \\
+\leqslant & tf(x_1)+(1-t)f(x_2) + tg(x_1)+(1-t)g(x_2) \\
+=&t[f(x_1)+g(x_1)]+(1-t)[f(x_2)+g(x_2)] \\
+=&t(f+g)(x_1)+(1-t)(f+g)(x_2)
+\end{aligned}
+$$
+Hence we have proved that the sum of convex functions is also convex.
+
+### Page 200, Problem 4. 
+
+Let the absolute value function be: $f(x)=|x|$
+
+Now:
+
+$$
+\begin{aligned}
+&f(tx_1+(1-t)x_2) \\
+= & |tx_1+(1-t)x_2| \\
+\leqslant & |tx_1| +|(1-t)x_2| \text{    (triangle inequality)} \\
+=&|t||x_1|+|1-t||x_2| \\
+=& tf(x_1)+(1-t)f(x_2)
+\end{aligned}
+$$
+Hence, we have proved that absolute value function is convex.
+
+Now the definition of $\ell_1 \text{ -norm}$ of a vector is given by adding together the absolute values of each of its components: page 175
+
+$$
+||v||_1 = \sum_j |v_j|
+$$
+
+We have proved that absolute value function is convex and the sum of convex functions is also convex. Hence, $\ell_1 \text{ -norm}$ is also convex. 
+
+
+### Page 200, Problem 5. 
+
+Two propositions needs to be proved beforehand:
+
+Proposition 1: squared of $\ell_2 \text{ norm}$ is convex.
+
+squared of $\ell_2 \text{ norm}$ is given by 
+
+$$
+||v||^2_2=\sum_j||v_j||^2=\sum_j(v_j)^2
+$$
+
+Now define $f(x)=x^2$ where $x\in \mathbb{R}$. Since $f(x)$ is in one dimension, we can prove $f(x)=x^2$ is convex by taking the second derivative $f''(x)=2>0$. The sum of convex functions is convex, hence square of $\ell_2 \text{ norm}$ is also convex. 
+
+Proposition 2: a convex function multiplied by a positive number is also convex. 
+
+Suppose $f:\mathbb{R}^p \rightarrow \mathbb{R}$ is convex, and $a\in R$ and $a > 0$, then
+
+$$
+\begin{aligned}
+& af(tx_1 + (1-t)x_2)  \\
+\leqslant & a \Big( tf(x_1)+(1-t)f(x_2) \Big) \\
+= & t \bullet af(x_1)+(1-t) \bullet af(x_2)
+\end{aligned}
+$$
+
+Hence, a convex function multiplied by a positive number is also convex. 
+
+The objective function is (page 181)
+$$
+\begin{aligned}
+&\frac{1}{2n}||y-Xb||^2_2+\lambda \Bigg ( (1-\alpha)\frac{1}{2} ||b||^2_2 +\alpha ||b||_1 \Bigg) \\
+=&\frac{1}{2n}||y-Xb||^2_2 + \lambda(1-\alpha)\frac{1}{2}||b||^2_2 + \lambda\alpha||b||_1
+\end{aligned}
+$$
+
+
+We have proved beforehand that $\ell_1 \text{ norm}$ and squared of $\ell_2 \text{ norm}$ are convex. Each of three terms are positive constant multiples of contex functions, so they are all convex. Hence the objective function is convex. 
+
+
+### Page 200, Problem 6.
+
+In this question, we are examing KKT condition by assume $\alpha = 1$ (lasso) in equation 7.37.
+
+The function to examine KKT condition for lasso regression in textbook page 189:
+
+```{r}
+# Check current KKT conditions for regression vector.
+#
+# Args:
+#     X: A numeric data matrix.
+#     y: Response vector.
+#     b: Current value of the regression vector.
+#     lambda: The penalty term.
+#
+# Returns:
+#     A logical vector indicating where the KKT conditions have
+#     been violated by the variables that are currently zero.
+casl_lenet_check_kkt <- function(X, y, b, lambda){
+  resids <- y - X %*% b
+  s <- apply(X, 2, function(xj) crossprod(xj, resids)) /
+             lambda / nrow(X)
+  # Return a vector indicating where the KKT conditions have
+  # been violated by the variables that are currently zero.
+  (b == 0) & (abs(s) >= 1)
+}
+
+```
+
+
+Now let's find testing KKT condition by using the made up dataset in textbook
+
+```{r message=FALSE}
+# textbook page 190
+set.seed(8907)
+n <- 1000L
+p <- 5000L
+X <- matrix(rnorm(n * p), ncol = p)
+beta <- c(seq(1, 0.1, length.out=(10L)), rep(0, p - 10L))
+y <- X %*% beta + rnorm(n = n, sd = 0.15)
+
+
+# apply lasso regression
+lasso_reg_with_screening <- function(x, y){
+  m1 <- cv.glmnet(x,y,alpha=1) # fit lasso regression
+  lambda_min <- m1$lambda.min # lambda with the smallest MSE
+  beta <- m1$glmnet.fit$beta[, m1$lambda == lambda_min]
+  casl_lenet_check_kkt(X, y, beta, lambda_min)
+}
+
+#screen the dataset
+result <- lasso_reg_with_screening(X, y)
+```
