@@ -34,8 +34,12 @@ sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
 
 # multiplication
 
+`%*%.default` = .Primitive("%*%")  # keep defalut
 `%*%` = function(x,...){ 
   UseMethod("%*%",x)
+}
+`%*%` <- function(x, y) {
+  UseMethod("%*%", x)
 }
 
 `%*%.sparse.matrix` <- function(a, b) {

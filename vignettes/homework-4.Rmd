@@ -99,11 +99,15 @@ Merge the two dataset with respect to the position of the non-zero values. Then 
 
 # multiplication
 
-Again, take note of the position of the non-zero values. 
+Again, take note of the position of the non-zero values. Merge two datasets arrording to row number in A and column number in B, since that's how matrix multiplication works. Use the position as a pivot information to get the new non-zero values of the matrix. 
 
 ```{r}
+`%*%.default` = .Primitive("%*%")  # keep defalut
 `%*%` = function(x,...){ 
   UseMethod("%*%",x)
+}
+`%*%` <- function(x, y) {
+  UseMethod("%*%", x)
 }
 
 `%*%.sparse.matrix` <- function(a, b) {
@@ -141,9 +145,15 @@ Again, take note of the position of the non-zero values.
   # return
   res
 }
+```
+
 
 # transpose
 
+Reverse the position of the non-zero values and make sure that dimension changes as well.
+
+
+```{r}
 t <- function (x, ...) {
   UseMethod("t", x)
 }
