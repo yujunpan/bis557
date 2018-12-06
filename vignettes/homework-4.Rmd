@@ -64,8 +64,9 @@ function(X, y, family, maxit=25, tol=1e-10, lambda)
 
 # Problem 3: sparse matrix
 
-A sparse matrix is a matrix that is comprised of mostly zero values. To save memories in the system and to store a large sparse matrix, we can just take note of the position 
+A sparse matrix is a matrix that is comprised of mostly zero values. To save memories in the system and to store a large sparse matrix, we can just take note of the position of the non-zero values with the sparse matrix's dimension.
 
+To create a sparse matrix class, we have to make sure to jot down all the non-zero values with their positions and the matrix dimension. 
 
 ```{r}
 sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
@@ -75,10 +76,13 @@ sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
   class(res) <- "sparse.matrix"
   return(res)
 }
+```
 
+# addition operator:
 
-# addition
+Merge the two dataset with respect to the position of the non-zero values. Then at each row, add the values together and take note of the position. 
 
+```{r}
 `+.sparse.matrix` <-function(a, b) {
   if (!identical(a$dim, b$dim)){
     stop("Different matrix dimension")
@@ -91,9 +95,13 @@ sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
   c <- c[order(c$j),]
   sparse.matrix(c$i, c$j, c$x, dims = a$dim)
 }
+```
 
 # multiplication
 
+Again, take note of the position of the non-zero values. 
+
+```{r}
 `%*%` = function(x,...){ 
   UseMethod("%*%",x)
 }
