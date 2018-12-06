@@ -1,0 +1,153 @@
+---
+title: "Homework 4"
+author: "Yujun Pan"
+output:
+  html_document:
+    self_contained: yes
+    toc: true
+---
+<!--
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{The linear model vignette}
+-->
+# Problem 1:
+
+```{r}
+#Generate a matrix X
+X <- matrix(c(1, 1, 2, 0.3), nrow=2, ncol=2)
+
+#Generate a propabilities p
+p <- c(0.0000001, 0.1)
+
+#According to textbook p27, calculate the condition number for X'X
+s <- t(X) %*% X
+svals <- svd(s)$d
+max(svals)/min(svals) #smallest
+
+#Calculate the condition number for logistic variation
+var <- diag(p*(1-p))
+H <- t(X) %*% var %*% X
+svals_H <- svd(H)$d
+max(svals_H)/min(svals_H) # max
+```
+
+# Problem 2: add l2 norm to `irwls_glm` function.
+
+```{r}
+#According to the textbook p129 coding
+
+# X: A numeric data matrix.
+# y: Response vector.
+# family: Instance of an R 'family' object
+# maxit: Integer maximum number of iterations.
+# tol: Numeric tolerance parameter.
+irwls_glm <- 
+function(X, y, family, maxit=25, tol=1e-10, lambda)
+{
+  beta <- rep(0,ncol(X))
+  for(j in 1:maxit)
+  {
+    b_old <- beta
+    eta <- X %*% beta
+    mu <- family$linkinv(eta)
+    mu_p <- family$mu.eta(eta)
+    z <- eta + (y - mu) / mu_p
+    W <- as.numeric(mu_p^2 / family$variance(mu))
+    XtX <- crossprod(X, diag(W) %*% X)
+    Xtz <- crossprod(X, W * z)
+    beta <- solve(XtX + diag(lambda, dim(XtX)[1]), Xtz) #insert l2 norm
+    if(sqrt(crossprod(beta - b_old)) < tol) break
+  }
+  beta
+}
+```
+
+# Problem 3: sparse matrix
+
+A sparse matrix is a matrix that is comprised of mostly zero values. To save memories in the system and to store a large sparse matrix, we can just take note of the position 
+
+
+```{r}
+sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
+  s <- data.frame(i, j, x)
+  res <- list(sparse_matrix = s, 
+              dim = dims)
+  class(res) <- "sparse.matrix"
+  return(res)
+}
+
+
+# addition
+
+`+.sparse.matrix` <-function(a, b) {
+  if (!identical(a$dim, b$dim)){
+    stop("Different matrix dimension")
+  }
+  c <-merge(a$sparse_matrix, b$sparse_matrix, by =c("i", "j"), all = TRUE, suffixes =c("1", "2"))
+  c$x1[is.na(c$x1)] <- 0
+  c$x2[is.na(c$x2)] <- 0
+  c$x <- c$x1+c$x2
+  c <- c[,c("i", "j", "x")]
+  c <- c[order(c$j),]
+  sparse.matrix(c$i, c$j, c$x, dims = a$dim)
+}
+
+# multiplication
+
+`%*%` = function(x,...){ 
+  UseMethod("%*%",x)
+}
+
+`%*%.sparse.matrix` <- function(a, b) {
+  
+  if (!inherits(a, "sparse.matrix"))
+    stop ("a is not a sparse.matrix class!")
+  
+  if (!inherits(b, "sparse.matrix"))
+    stop ("b is not a sparse.matrix class!")
+  
+  if (a$dim[1] != b$dim[2])
+    stop ("incorrect dimensions for multiplication!")
+  
+  # below is the function from textbook
+  colnames(b$sparse_matrix) <- c("i2", "j2", "x2")
+  c <- merge(a$sparse_matrix, b$sparse_matrix, by.x = "j", by.y = "i2", all = FALSE, 
+             suffixes = c("1", "2"))
+  c$x <- c$x * c$x2
+  c$key <- paste(c$i, c$j2, sep = "-")
+  x <- tapply(c$x, c$key, sum)
+  key <- strsplit(names(x), "-")
+  d <- data.frame(i = sapply(key, getElement, 1),
+                  j = sapply(key, getElement, 2),
+                  x = as.numeric(x))
+  
+  # add numeric type is it won't past test file
+  d$i <- as.numeric(d$i)
+  d$j <- as.numeric(d$j)
+  
+  # have to change row order and names because it won't match test example
+  res <- sparse.matrix(d$i, d$j, d$x, dims= c(a$dim[1], b$dim[2]))
+  res$sparse_matrix <- res$sparse_matrix[order(res$sparse_matrix$j), ]
+  row.names(res$sparse_matrix) <- NULL
+  
+  # return
+  res
+}
+
+# transpose
+
+t <- function (x, ...) {
+  UseMethod("t", x)
+}
+
+`t.sparse.matrix` <- function(a){
+  temp <- a$sparse_matrix$i
+  a$sparse_matrix$i <- a$sparse_matrix$j
+  a$sparse_matrix$j <- temp
+  a$sparse_matrix <- rev(a$sparse_matrix)
+  a$dim <- c(a$dim[2], a$dim[1])
+  return(a)
+}
+
+
+```
