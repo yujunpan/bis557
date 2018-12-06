@@ -5,6 +5,11 @@ date: "11/7/2018"
 output: pdf_document
 ---
 
+<!--
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{The Ridge Regression vignette}
+-->
+
 ### Page 117, Problem 7.
 
 The kernel density estimator is given by:

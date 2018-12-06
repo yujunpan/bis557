@@ -8,7 +8,7 @@ output:
 ---
 <!--
 %\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{The linear model vignette}
+%\VignetteIndexEntry{The Ridge Regression vignette}
 -->
 
 # Ridge Regression
