@@ -25,11 +25,11 @@ data(ridge_train)
 
 ### ridge class
 ```{r}
-# predict.ridge_reg = function(object,...) {
-#   newdata = list(...)[[1]]
-#   m = model.matrix(object$form, newdata)
-#   m %*% object$coefficients
-# }
+predict.ridge_reg = function(object,...) {
+  newdata = list(...)[[1]]
+  m = model.matrix(object$form, newdata)
+  m %*% object$coefficients
+}
 
 ```
 
