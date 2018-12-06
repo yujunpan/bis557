@@ -1,0 +1,55 @@
+---
+title: "The Ridge Model"
+author: "Yujun Pan"
+output:
+  html_document:
+    self_contained: yes
+    toc: true
+---
+<!--
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{The linear model vignette}
+-->
+
+# Ridge Regression
+
+Ridge regression is a shrinkage method that imposes a penalty on the magnitude of the coefficients to regularize the model. In ridge regression, coefficients get shrunken towards 0 and standard errors of coefficients are much lower. This assignment asks us to build our own ridge regression and choose the optimal hyperparameter, lambda. 
+
+### load datasets
+
+```{r}
+library(bis557)
+data(ridge_test)
+data(ridge_train)
+```
+
+### ridge class
+```{r}
+# predict.ridge_reg = function(object,...) {
+#   newdata = list(...)[[1]]
+#   m = model.matrix(object$form, newdata)
+#   m %*% object$coefficients
+# }
+
+```
+
+### train data and calculate out of sample MSE
+```{r}
+lambda_seq = seq(0.01, 1000, by=0.1)
+MSEs = rep(NA, length(lambda_seq))
+for (i in 1:length(lambda_seq)){
+  fit = ridge_reg(y ~., lambda_seq[i], ridge_train)
+  error = ridge_test$y - predict(fit, ridge_test)
+  MSEs[i] = mean(error^2)
+}
+```
+
+### plot
+```{r}
+plot(log(lambda_seq), MSEs, xlab = "log(lambda)", ylab = "Out-of-Sample MSE")
+```
+
+### show lambda with smallest MSE
+```{r}
+lambda_seq[which.min(MSEs)]
+```

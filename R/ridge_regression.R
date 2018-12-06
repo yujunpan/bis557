@@ -4,6 +4,7 @@
 #' @param formula a formula
 #' @param lambda a hyper parameter
 #' @param data a data.frame
+#' @import stats MASS graphics
 #' @return An ridge regression object
 #' @export
 

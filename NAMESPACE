@@ -3,4 +3,7 @@
 export(linear_model)
 export(ridge_reg)
 export(sparse.matrix)
+import(MASS)
+import(graphics)
+import(stats)
 importFrom(stats,model.matrix)
