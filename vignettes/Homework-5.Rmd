@@ -10,12 +10,85 @@ output:
 %\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Homework 5}
 -->
+**1.**
 
+I'm setting all the evaluation 
+
+
+This code is referenced from Canvas note on Nov 26, `first-try`. 
 
 ```{r}
+# Do this before load keras
+# Sys.setenv(KERAS_BACKEND = "keras")
+# Sys.setenv(THEANO_FLAGS = "device=gpu,floatX=float32")
 library(keras)
+library(glmnet)
+library(doMC)
+registerDoMC()
+# The data, shuffled and split between train and test sets
+mnist <- dataset_mnist()
 
+x_train <- mnist$train$x
+y_train <- mnist$train$y
+x_test <- mnist$test$x
+y_test <- mnist$test$y
+
+x_train <- array_reshape(x_train, c(60000, 28^2))
+x_test <- array_reshape(x_test, c(10000, 28^2))
+y_train <- factor(y_train)
+y_test <- factor(y_test)
+
+s <- sample(seq_along(y_train), 1000) 
+
+fit <- cv.glmnet(x_train[s,], y_train[s], family = "multinomial")
+
+# out-of sample
+preds <- predict(fit$glmnet.fit, x_test, s = fit$lambda.min, 
+                 type = "class")
+t <- table(as.vector(preds), y_test)
+sum(diag(t)) / sum(t) 
+# 0.8424
+
+# in-sample test
+preds.train <- predict(fit$glmnet.fit, x_train[s, ], s = fit$lambda.min, type = "class")
+t_train <- table(as.vector(preds.train), y_train[s])
+sum(diag(t_train)) / sum(t_train) 
+## 0.988
 ```
+
+Now add intensity as extra feature. 
+Reference: http://apapiu.github.io/2016-01-02-minst/
+
+```{r}
+intensity <- apply(x_train,1,mean)
+intensity <- aggregate(intensity,by=list(y_train),FUN = mean)
+
+ggplot(data =intensity,aes(x=Group.1,y=x))+geom_bar(stat = "identity") +   scale_x_discrete(limits=0:9)+xlab("digit label")+ylab("average intensity")
+```
+
+Intensity looks quite different from digits. Especially 1 and 2 are dramatically different from the others. 
+
+Add intensity to the features
+
+```{r}
+intensity <- apply(x_train,1,mean)
+intensity<-as.vector(intensity)
+x_train<-cbind(x_train,intensity)
+x_test<-cbind(x_test,as.vector(apply(x_test,1,mean)))
+```
+
+Test out of sample accuracy. 
+
+```{r}
+fit <- cv.glmnet(x_train[s,], y_train[s], family = "multinomial")
+preds <- predict(fit$glmnet.fit, x_test, s = fit$lambda.min, 
+                 type = "class")
+t <- table(as.vector(preds), y_test)
+sum(diag(t)) / sum(t)
+# 0.8447
+```
+
+Now the accuracy improved from 0.8424 to 0.8447, so adding intensity does improve out-of-sample accuracy slightly.
 
 **2.** CASL Number 4 in Exercises 8.11
 
@@ -27,7 +100,6 @@ https://keras.rstudio.com/articles/examples/mnist_cnn.html
 Professor Kane has given us permission to use mnist, since emnist was too big to knit. 
 
 ```{r}
-
 # Data Preparation -----------------------------------------------------
 batch_size <- 128
 num_classes <- 10
@@ -95,9 +167,8 @@ scores <- model %>% evaluate(
 )
 
 # Output metrics
-cat('Test loss:', scores[[1]], '\n')
-cat('Test accuracy:', scores[[2]], '\n')
-
+cat('Test loss:', scores[[1]], '\n') #0.04465571 
+cat('Test accuracy:', scores[[2]], '\n') #0.9849 
 
 ```
 
@@ -284,6 +355,7 @@ X <- matrix(runif(1000, min=-1, max=1), ncol=1)
 y <- X[, 1, drop = FALSE]^2 + rnorm(1000, sd = 0.1)
 
 # add noise according to lecture code on Nov 26. Use uniform distribution
+# trying to be careful, adding as less noise as possible to maintain the U-shape
 y[sample(1000, 60)] <- c(runif(60, 3, 6))
 
 #Fit the model:
