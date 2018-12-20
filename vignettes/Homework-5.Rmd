@@ -205,11 +205,52 @@ scores <- model %>% evaluate(
 )
 
 # Output metrics
-cat('Test loss:', scores[[1]], '\n') #0.04465571 
-cat('Test accuracy:', scores[[2]], '\n') #0.9849 
+cat('Test loss:', scores[[1]], '\n') # 0.06600517 
+cat('Test accuracy:', scores[[2]], '\n') #0.9784
 
 
 ```
+
+
+When kernel size = (2,2) the accuracy decreases to 0.9784 slightly. 
+Now we choose a larger size = (5,5)
+
+```{r eval=FALSE}
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(5,5), activation = 'relu',
+                input_shape = input_shape) %>% 
+  layer_conv_2d(filters = 64, kernel_size = c(5,5), activation = 'relu') %>% 
+  layer_max_pooling_2d(pool_size = c(5, 5)) %>% 
+  layer_dropout(rate = 0.25) %>% 
+  layer_flatten() %>% 
+  layer_dense(units = 128, activation = 'relu') %>% 
+  layer_dropout(rate = 0.5) %>% 
+  layer_dense(units = num_classes, activation = 'softmax')
+
+# Compile model
+model %>% compile(
+  loss = loss_categorical_crossentropy,
+  optimizer = optimizer_adadelta(),
+  metrics = c('accuracy')
+)
+
+# Train model
+model %>% fit(
+  x_train, y_train,
+  batch_size = batch_size,
+  epochs = epochs,
+  validation_split = 0.2
+)
+
+scores <- model %>% evaluate(
+  x_test, y_test, verbose = 0
+)
+
+# Output metrics
+cat('Test loss:', scores[[1]], '\n') # 0.06600517 
+cat('Test accuracy:', scores[[2]], '\n') #0.9784
+```
+
 
 
 # 3. CASL Number 8 in Exercises 8.11
@@ -414,5 +455,5 @@ ggplot(sim, aes(x=X, y=y)) +
   geom_line(aes(x=X, y=y_pred))
 ```
 
-According to the plot, the neural network with mean absolute deviation as a 
-loss function works well to capture the relationship between X and y.
+Neural network using mean absolute deviation as a 
+loss function works well. 
