@@ -21,6 +21,7 @@ This code is referenced from Canvas note on Nov 26, `first-try`.
 library(keras)
 library(glmnet)
 library(ggplot2)
+install_keras()
 
 mnist <- dataset_mnist()
 
@@ -168,7 +169,48 @@ cat('Test accuracy:', scores[[2]], '\n') #0.9849
 
 ```
 
-In Professor Kane's example, we use 
+In Professor Kane's example, we use kernel size = (3,3) and drop out rate is 0.25, the classification accuracy is 0.9849. 
+
+Now I'm going to vary kernel size to (2,2) and (5,5), to save time I'm going to set eval=FALSE for the following section.
+
+```{r eval=FALSE}
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(2,2), activation = 'relu',
+                input_shape = input_shape) %>% 
+  layer_conv_2d(filters = 64, kernel_size = c(2,2), activation = 'relu') %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>% 
+  layer_dropout(rate = 0.25) %>% 
+  layer_flatten() %>% 
+  layer_dense(units = 128, activation = 'relu') %>% 
+  layer_dropout(rate = 0.5) %>% 
+  layer_dense(units = num_classes, activation = 'softmax')
+
+# Compile model
+model %>% compile(
+  loss = loss_categorical_crossentropy,
+  optimizer = optimizer_adadelta(),
+  metrics = c('accuracy')
+)
+
+# Train model
+model %>% fit(
+  x_train, y_train,
+  batch_size = batch_size,
+  epochs = epochs,
+  validation_split = 0.2
+)
+
+scores <- model %>% evaluate(
+  x_test, y_test, verbose = 0
+)
+
+# Output metrics
+cat('Test loss:', scores[[1]], '\n') #0.04465571 
+cat('Test accuracy:', scores[[2]], '\n') #0.9849 
+
+
+```
+
 
 # 3. CASL Number 8 in Exercises 8.11
 
