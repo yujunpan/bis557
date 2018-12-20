@@ -31,6 +31,8 @@ svals_H <- svd(H)$d
 max(svals_H)/min(svals_H) # max
 ```
 
+The condition number of logistic variation Hessian matrix $X'diag(p(1-p))X$ is much larger than that of $X'X$; hence we have shown that the linear Hessian is well conditioned but the logistic variation is not.
+
 # Problem 2: add l2 norm to `irwls_glm` function.
 
 ```{r}

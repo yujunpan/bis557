@@ -1,0 +1,299 @@
+---
+title: "Homework 5"
+author: "Yujun Pan"
+output:
+  html_document:
+    self_contained: yes
+    toc: true
+---
+<!--
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteIndexEntry{Homework 5}
+-->
+
+**2.** CASL Number 4 in Exercises 8.11
+
+Adjust the kernel size, and any other parameters you think are useful, in the convolutional neural network for EMNIST in Section 8.10.4. Can you improve on the classification rate?
+
+I'm going to modify based on coade from Nov 26 `s.r` that was uploaded on Canvas, which is taken from 
+https://keras.rstudio.com/articles/examples/mnist_cnn.html
+
+Professor Kane has given us permission to use mnist, since emnist was too big to knit. 
+
+```{r}
+# Data Preparation -----------------------------------------------------
+batch_size <- 128
+num_classes <- 10
+epochs <- 2
+
+# Input image dimensions
+img_rows <- 28
+img_cols <- 28
+
+# The data, shuffled and split between train and test sets
+mnist <- dataset_mnist()
+x_train <- mnist$train$x
+y_train <- mnist$train$y
+x_test <- mnist$test$x
+y_test <- mnist$test$y
+
+# Redefine  dimension of train/test inputs
+x_train <- array_reshape(x_train, c(nrow(x_train), img_rows, img_cols, 1))
+x_test <- array_reshape(x_test, c(nrow(x_test), img_rows, img_cols, 1))
+input_shape <- c(img_rows, img_cols, 1)
+
+# Transform RGB values into [0,1] range
+x_train <- x_train / 255
+x_test <- x_test / 255
+
+cat('x_train_shape:', dim(x_train), '\n')
+cat(nrow(x_train), 'train samples\n')
+cat(nrow(x_test), 'test samples\n')
+
+# Convert class vectors to binary class matrices
+y_train <- to_categorical(y_train, num_classes)
+y_test <- to_categorical(y_test, num_classes)
+
+# Define Model -----------------------------------------------------------
+
+# Define model
+model <- keras_model_sequential() %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3,3), activation = 'relu',
+                input_shape = input_shape) %>% 
+  layer_conv_2d(filters = 64, kernel_size = c(3,3), activation = 'relu') %>% 
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>% 
+  layer_dropout(rate = 0.25) %>% 
+  layer_flatten() %>% 
+  layer_dense(units = 128, activation = 'relu') %>% 
+  layer_dropout(rate = 0.5) %>% 
+  layer_dense(units = num_classes, activation = 'softmax')
+
+# Compile model
+model %>% compile(
+  loss = loss_categorical_crossentropy,
+  optimizer = optimizer_adadelta(),
+  metrics = c('accuracy')
+)
+
+# Train model
+model %>% fit(
+  x_train, y_train,
+  batch_size = batch_size,
+  epochs = epochs,
+  validation_split = 0.2
+)
+
+scores <- model %>% evaluate(
+  x_test, y_test, verbose = 0
+)
+
+# Output metrics
+cat('Test loss:', scores[[1]], '\n')
+cat('Test accuracy:', scores[[2]], '\n')
+
+
+```
+
+# 3. CASL Number 8 in Exercises 8.11
+
+Please see textbook page 
+
+```{r}
+# Create list of weights to describe a dense neural network.
+# Args: sizes: A vector giving the size of each layer, including the input and output layers.
+# Returns: A list containing initialized weights and biases.
+casl_nn_make_weights <- function(sizes) {
+  L <- length(sizes) - 1L
+  weights <- vector("list", L)
+  for (j in seq_len(L)) {
+    w <- matrix(rnorm(sizes[j] * sizes[j + 1L]), ncol = sizes[j], nrow = sizes[j + 1L])
+    weights[[j]] <- list(w=w, b=rnorm(sizes[j + 1L]))
+  }
+  weights 
+}
+
+
+# Apply a rectified linear unit (ReLU) to a vector/matrix.
+# Args: v: A numeric vector or matrix.
+# Returns: The original input with negative values truncated to zero.
+casl_util_ReLU <- function(v) {
+  v[v < 0] <- 0
+  v
+}
+# Apply derivative of the rectified linear unit (ReLU).
+# Args: v: A numeric vector or matrix.
+# Returns: Sets positive values to 1 and negative values to zero.
+casl_util_ReLU_p <- function(v) {
+  p <- v * 0
+  p[v > 0] <- 1
+  p
+}
+
+# Derivative of the mean absolute deviation (MAD) function.
+# Args: y: A numeric vector of responses.
+#       a: A numeric vector of predicted responses.
+# Returns: Returned current derivative the MAD function.
+casl_util_mad_p <- function(y, a) {
+  derloss <- c()
+  for (i in 1:length(a)) {
+    if (a[i] >= mean(y)) derloss[i]=1
+    else derloss[i]=-1
+  }
+  return(derloss)
+}
+# Apply forward propagation to a set of NN weights and biases.
+# Args: x: A numeric vector representing one row of the input.
+#       weights: A list created by casl_nn_make_weights.
+#       sigma: The activation function.
+# Returns: A list containing the new weighted responses (z) and activations (a).
+casl_nn_forward_prop <- function(x, weights, sigma) {
+  L <- length(weights)
+  z <- vector("list", L)
+  a <- vector("list", L)
+  for (j in seq_len(L)) {
+    a_j1 <- if(j == 1) x else a[[j - 1L]]
+    z[[j]] <- weights[[j]]$w %*% a_j1 + weights[[j]]$b
+    a[[j]] <- if (j != L) sigma(z[[j]]) else z[[j]]
+  }
+  list(z=z, a=a)
+}
+# Apply backward propagation algorithm.
+# Args: x: A numeric vector representing one row of the input.
+#       y: A numeric vector representing one row of the response.
+#       weights: A list created by casl_nn_make_weights.
+#       f_obj: Output of the function casl_nn_forward_prop.
+#       sigma_p: Derivative of the activation function.
+#       f_p: Derivative of the loss function.
+# Returns: A list containing the new weighted responses (z) and activations (a).
+casl_nn_backward_prop <- function(x, y, weights, f_obj, sigma_p, f_p) {
+  z <- f_obj$z
+  a <- f_obj$a
+  L <- length(weights)
+  grad_z <- vector("list", L)
+  grad_w <- vector("list", L)
+  for (j in rev(seq_len(L))) {
+    if (j == L) {
+      grad_z[[j]] <- f_p(y, a[[j]])
+      } 
+    else {
+      grad_z[[j]] <- (t(weights[[j + 1]]$w) %*% grad_z[[j + 1]]) * sigma_p(z[[j]])
+      }
+    a_j1 <- if(j == 1) x else a[[j - 1L]]
+    grad_w[[j]] <- grad_z[[j]] %*% t(a_j1)
+  }
+  list(grad_z=grad_z, grad_w=grad_w)
+}
+# Apply stochastic gradient descent (SGD) to estimate NN.
+# Args: X: A numeric data matrix.
+#       y: A numeric vector of responses.
+#       sizes: A numeric vector giving the sizes of layers in the neural network.
+#       epochs: Integer number of epochs to computer.
+#       eta: Positive numeric learning rate.
+#       weights: Optional list of starting weights.
+# Returns: A list containing the trained weights for the network.
+casl_nn_sgd <- function(X, y, sizes, epochs, eta, weights=NULL) {
+  if (is.null(weights)) {
+    weights <- casl_nn_make_weights(sizes)
+    }
+  for (epoch in seq_len(epochs)) {
+    for (i in seq_len(nrow(X))) {
+      f_obj <- casl_nn_forward_prop(X[i,], weights, casl_util_ReLU)
+      b_obj <- casl_nn_backward_prop(X[i,], y[i,], weights, f_obj, casl_util_ReLU_p, casl_util_mad_p)
+      for (j in seq_along(b_obj)) {
+        weights[[j]]$b <- weights[[j]]$b - eta * b_obj$grad_z[[j]]
+        weights[[j]]$w <- weights[[j]]$w - eta * b_obj$grad_w[[j]]
+      }
+    } 
+  }
+  weights 
+}
+# Predict values from a training neural network.
+# Args: weights: List of weights describing the neural network.
+#       X_test: A numeric data matrix for the predictions.
+# Returns: A matrix of predicted values.
+casl_nn_predict <- function(weights, X_test) {
+  p <- length(weights[[length(weights)]]$b)
+  y_hat <- matrix(0, ncol = p, nrow = nrow(X_test))
+  for (i in seq_len(nrow(X_test))) {
+    a <- casl_nn_forward_prop(X_test[i,], weights, casl_util_ReLU)$a
+    y_hat[i, ] <- a[[length(a)]]
+  }
+  y_hat 
+}
+
+
+# Apply stochastic gradient descent (SGD) for multinomial NN.
+#
+# Args:
+#     X: A numeric data matrix.
+#     y: A numeric vector of responses.
+#     sizes: A numeric vector giving the sizes of layers in
+#            the neural network.
+#     epochs: Integer number of epochs to computer.
+#     eta: Positive numeric learning rate.
+#     mu: Non-negative momentum term.
+#     l2: Non-negative penalty term for l2-norm.
+#     weights: Optional list of starting weights.
+#
+# Returns:
+#     A list containing the trained weights for the network.
+casl_nnmulti_sgd <- function(X, y, sizes, epochs, eta, mu=0, l2=0, weights = NULL) {
+  if (is.null(weights))
+  {
+    weights <- casl_nn_make_weights_mu(sizes)
+  }
+  for (epoch in seq_len(epochs))
+  {
+    for (i in seq_len(nrow(X)))
+    {
+      f_obj <- casl_nnmulti_forward_prop(X[i, ], weights,
+                                         casl_util_ReLU)
+      b_obj <- casl_nnmulti_backward_prop(X[i, ], y[i, ],
+                                      weights, f_obj,
+                                      casl_util_ReLU_p)
+  for (j in seq_along(b_obj))
+  {
+    weights[[j]]$b <- weights[[j]]$b -
+                        eta * b_obj$grad_z[[j]]
+    weights[[j]]$v <- mu * weights[[j]]$v -
+                      eta * b_obj$grad_w[[j]]
+  weights[[j]]$w <- (1 - eta * l2) *
+                    weights[[j]]$w +
+                         weights[[j]]$v
+  } }
+  }
+weights 
+}
+
+
+```
+
+
+Simulating data based on textbook page 232. 
+
+```{r}
+set.seed(24232)
+X <- matrix(runif(1000, min=-1, max=1), ncol=1)
+y <- X[, 1, drop = FALSE]^2 + rnorm(1000, sd = 0.1)
+
+# add noise according to lecture code on Nov 26. Use uniform distribution
+y[sample(1000, 60)] <- c(runif(60, 3, 6))
+
+#Fit the model:
+weights <- casl_nn_sgd(X, y, sizes=c(1, 25, 1), epochs=25, eta=0.01)
+y_pred <- casl_nn_predict(weights, X)
+
+#Visualize the model prediction:
+library(ggplot2)
+sim <- data.frame(X, y, y_pred)
+
+#Exclude outliers in the plot:
+ggplot(sim, aes(x=X, y=y)) + 
+  geom_point(color='blue') + 
+  ylim(-0.5, 1.2) +
+  geom_smooth(color='red', linetype='dashed') +
+  geom_line(aes(x=X, y=y_pred))
+```
+
+According to the plot, the neural network with mean absolute deviation as a 
+loss function works well to capture the relationship between X and y.
