@@ -10,10 +10,10 @@ output:
 %\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Homework 5}
 -->
+Please note that I cannot pass Travis, as it takes to long to build. Travis says the build will terminate if there is no output received in 10 minutes. 
+
+
 **1.**
-
-I'm setting all the evaluation 
-
 
 This code is referenced from Canvas note on Nov 26, `first-try`. 
 
@@ -251,7 +251,8 @@ cat('Test loss:', scores[[1]], '\n') # 0.06600517
 cat('Test accuracy:', scores[[2]], '\n') #0.9784
 ```
 
-
+When kernel size = (5,5) the accuracy increases to 0.988. 
+So a bigger kernel size will increase the accuracy. 
 
 # 3. CASL Number 8 in Exercises 8.11
 
