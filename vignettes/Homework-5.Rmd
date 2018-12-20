@@ -10,7 +10,7 @@ output:
 %\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Homework 5}
 -->
-Please note that I cannot pass Travis, as it takes to long to build. Travis says the build will terminate if there is no output received in 10 minutes. 
+Please note that I cannot pass Travis, as it takes to long to build. Travis says the build will terminate if there is no output received in 10 minutes. This vignette was able to knit. If you would like to see output, please check html file on canvas. 
 
 
 **1.**
