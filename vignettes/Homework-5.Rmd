@@ -11,6 +11,12 @@ output:
 %\VignetteIndexEntry{Homework 5}
 -->
 
+
+```{r}
+library(keras)
+
+```
+
 **2.** CASL Number 4 in Exercises 8.11
 
 Adjust the kernel size, and any other parameters you think are useful, in the convolutional neural network for EMNIST in Section 8.10.4. Can you improve on the classification rate?
@@ -21,6 +27,7 @@ https://keras.rstudio.com/articles/examples/mnist_cnn.html
 Professor Kane has given us permission to use mnist, since emnist was too big to knit. 
 
 ```{r}
+
 # Data Preparation -----------------------------------------------------
 batch_size <- 128
 num_classes <- 10
