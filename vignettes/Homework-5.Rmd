@@ -18,14 +18,10 @@ I'm setting all the evaluation
 This code is referenced from Canvas note on Nov 26, `first-try`. 
 
 ```{r}
-# Do this before load keras
-# Sys.setenv(KERAS_BACKEND = "keras")
-# Sys.setenv(THEANO_FLAGS = "device=gpu,floatX=float32")
 library(keras)
 library(glmnet)
-library(doMC)
-registerDoMC()
-# The data, shuffled and split between train and test sets
+library(ggplot2)
+
 mnist <- dataset_mnist()
 
 x_train <- mnist$train$x
@@ -171,6 +167,8 @@ cat('Test loss:', scores[[1]], '\n') #0.04465571
 cat('Test accuracy:', scores[[2]], '\n') #0.9849 
 
 ```
+
+In Professor Kane's example, we use 
 
 # 3. CASL Number 8 in Exercises 8.11
 
